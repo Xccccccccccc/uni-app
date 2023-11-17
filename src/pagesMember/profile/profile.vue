@@ -158,7 +158,7 @@ onLoad(() => {
             :value="fullLocation?.split(' ')"
             @change="onFullLocationChange"
           >
-            <view v-if="profile?.fullLocation">{{ fullLocation }}</view>
+            <view v-if="fullLocation">{{ fullLocation }}</view>
             <view class="placeholder" v-else>请选择城市</view>
           </picker>
         </view>
