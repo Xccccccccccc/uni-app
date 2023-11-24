@@ -1,7 +1,7 @@
 import { defineConfig } from 'windicss/helpers'
 
 function createSpacing() {
-  const ans = {}
+  let ans = {}
   for (let i = 1; i < 1000; ++i) {
     ans[i] = `${i}rpx` // 也可以替换成其他的尺寸和单位
   }
@@ -15,5 +15,5 @@ export default defineConfig({
   },
   theme: {
     spacing: createSpacing()
-  }
+  },
 })

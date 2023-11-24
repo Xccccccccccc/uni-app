@@ -37,8 +37,6 @@ module.exports = {
     'vue/multi-word-component-names': ['off'],
     'vue/no-setup-props-destructure': ['off'],
     'vue/no-deprecated-html-element-is': ['off'],
-    '@typescript-eslint/no-unused-vars': ['off'],
-    '@typescript-eslint/no-undef': ['off'],
-    'no-undef': 0
+    '@typescript-eslint/no-unused-vars': ['off']
   }
 }
