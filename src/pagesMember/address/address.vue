@@ -1,6 +1,16 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { codeToText } from '@/utils/element-china-area-data.mjs'
+import { getMemberAddressAPI, deleteMemberAddressByIdAPI } from '@/api/address.api'
+import type { useAddressStore } from '@/stores/modules/address'
+// 修改收货地址
+const onChangeAddress = (item: AddressItem) => {
+  // 修改选中收货地址
+  const addressStore = useAddressStore()
+  addressStore.changeSelectedAddress(item)
+  // 返回上一⻚
+  uni.navigateBack()
+}
 
 // 获取收货地址列表数据
 const addressList = ref<AddressItem[]>([])
@@ -8,34 +18,25 @@ const getMemberAddressData = async () => {
   const res = await getMemberAddressAPI()
   addressList.value = res.result
 }
-
-// 初始化调用(页面显示)
-onShow(() => {
-  getMemberAddressData()
-})
-//删除收货地址
+// 删除收货地址
 const onDeleteAddress = (id: string) => {
-  //二次确认
+  // 二次确认
   uni.showModal({
-    content: '删除地址？',
+    content: '删除地址?',
     success: async (res) => {
       if (res.confirm) {
-        //根据id删除收获地址
+        // 根据id删除收货地址
         await deleteMemberAddressByIdAPI(id)
-        //重新获取收货地址列表
+        // 重新获取收货地址列表
         getMemberAddressData()
       }
     }
   })
 }
-
-//修改收货地址
-const onChangeAddress = (item: AddressItem) => {
-  //修改选中的收货地址
-  const addressStore = useAddressStore()
-  addressStore.changeSelectedAddress(item)
-  uni.navigateBack()
-}
+// 初始化调用(页面显示)
+onShow(() => {
+  getMemberAddressData()
+})
 </script>
 
 <template>
@@ -60,15 +61,15 @@ const onChangeAddress = (item: AddressItem) => {
               </view>
               <navigator
                 class="edit"
+                @tap.stop="() => {}"
                 hover-class="none"
                 :url="`/pagesMember/address/address-form?id=${item.id}`"
-                @top.stop="() => {}"
               >
                 修改
               </navigator>
             </view>
             <template #right>
-              <button class="delete-button" @tap="onDeleteAddress(item.id)">删除</button>
+              <button @tap="onDeleteAddress(item.id)" class="delete-button">删除</button>
             </template>
           </uni-swipe-action-item>
         </uni-swipe-action>

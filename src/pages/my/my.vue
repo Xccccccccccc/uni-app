@@ -8,7 +8,7 @@ const orderTypes = [
   { type: 3, text: '待收货', icon: 'icon-check' },
   { type: 4, text: '待评价', icon: 'icon-comment' }
 ]
-// 获取会员信息
+//获取会员信息
 const memberStore = useMemberStore()
 </script>
 
@@ -19,7 +19,7 @@ const memberStore = useMemberStore()
       <!-- 情况1：已登录 -->
       <view class="flex h-120 px-36 text-white" v-if="memberStore.profile">
         <navigator url="/pagesMember/profile/profile" hover-class="none">
-          <image class="w-120 h-120 rounded-1" mode="aspectFill" :src="memberStore.profile.avatar"></image>
+          <image class="w-120 h-120 rounded-1" mode="aspectFill" :src="memberStore.profile?.avatar"></image>
         </navigator>
         <view class="flex flex-col justify-center leading-30 py-16 ml-20">
           <view class="max-w-350 mb-16 text-30rpx truncate">

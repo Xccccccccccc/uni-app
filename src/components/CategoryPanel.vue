@@ -1,10 +1,9 @@
 <script setup lang="ts">
-// 定义 props 接收数据
+//定义props接收数据
 defineProps<{
   list: CategoryItem[]
 }>()
 </script>
-
 <template>
   <view class="category">
     <navigator
@@ -19,7 +18,6 @@ defineProps<{
     </navigator>
   </view>
 </template>
-
 <style lang="scss">
 /* 前台类目 */
 .category {
@@ -41,6 +39,7 @@ defineProps<{
       width: 100rpx;
       height: 100rpx;
     }
+
     .text {
       font-size: 26rpx;
       color: #666;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 //导入列表组件
 import OrderList from './components/OrderList.vue'
+import { putMemberOrderReceiptByIdAPI } from '@/api/order.api'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 // tabs 数据
@@ -11,6 +12,7 @@ const orderTabs = ref([
   { orderState: 3, title: '待收货' },
   { orderState: 4, title: '待评价' }
 ])
+
 //获取页面参数
 const query = defineProps<{
   type: string
@@ -55,7 +57,7 @@ const activeIndex = ref(orderTabs.value.findIndex((v) => v.orderState === Number
               <image
                 mode="aspectFit"
                 src="//yanxuan-item.nosdn.127.net/c07edde1047fa1bd0b795
-bed136c2bb2.jpg"
+        bed136c2bb2.jpg"
               ></image>
             </view>
             <view class="meta">
@@ -102,12 +104,14 @@ page {
   height: 100%;
   overflow: hidden;
 }
+
 .viewport {
   height: 100%;
   display: flex;
   flex-direction: column;
   background-color: #fff;
 }
+
 // tabs
 .tabs {
   display: flex;
@@ -118,6 +122,7 @@ page {
   box-shadow: 0 4rpx 6rpx rgba(240, 240, 240, 0.6);
   position: relative;
   z-index: 9;
+
   .item {
     flex: 1;
     text-align: center;
@@ -125,6 +130,7 @@ page {
     font-size: 28rpx;
     color: #262626;
   }
+
   .cursor {
     position: absolute;
     left: 0;
@@ -137,10 +143,12 @@ page {
     transition: all 0.4s;
   }
 }
+
 // swiper
 .swiper {
   background-color: #f7f7f8;
 }
+
 // 订单列表
 .orders {
   .card {
@@ -149,10 +157,12 @@ page {
     margin: 20rpx 20rpx 0;
     border-radius: 10rpx;
     background-color: #fff;
+
     &:last-child {
       padding-bottom: 40rpx;
     }
   }
+
   .status {
     display: flex;
     align-items: center;
@@ -160,13 +170,16 @@ page {
     font-size: 28rpx;
     color: #999;
     margin-bottom: 15rpx;
+
     .date {
       color: #666;
       flex: 1;
     }
+
     .primary {
       color: #ff9240;
     }
+
     .icon-delete {
       line-height: 1;
       margin-left: 10rpx;
@@ -174,10 +187,12 @@ page {
       border-left: 1rpx solid #e3e3e3;
     }
   }
+
   .goods {
     display: flex;
     margin-bottom: 20rpx;
   }
+
   .cover {
     width: 170rpx;
     height: 170rpx;

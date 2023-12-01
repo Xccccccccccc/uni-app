@@ -77,9 +77,9 @@
             </view>
           </view>
         </scroll-view>
-        <view class="close" @click="close('close')" v-if="showClose != false"
-          ><image class="close-item" :src="closeImage"></image
-        ></view>
+        <view class="close" @click="close('close')" v-if="showClose != false">
+          <image class="close-item" :src="closeImage"></image>
+        </view>
       </view>
 
       <view class="btn-wrapper" v-if="outFoStock || mode == 4">
@@ -141,22 +141,11 @@
 
 <script>
 /* eslint-disable */
-var vk // vk依赖
-var goodsCache = {} // 本地商品缓存
+var vk; // vk依赖
+var goodsCache = {}; // 本地商品缓存
 export default {
   name: 'vk-data-goods-sku-popup',
-  emits: [
-    'update:modelValue',
-    'input',
-    'update-goods',
-    'open',
-    'close',
-    'add-cart',
-    'buy-now',
-    'cart',
-    'buy',
-    'num-change'
-  ],
+  emits: ['update:modelValue', 'input', 'update-goods', 'open', 'close', 'add-cart', 'buy-now', 'cart', 'buy', 'num-change'],
   props: {
     // true 组件显示 false 组件隐藏
     value: {
@@ -383,7 +372,7 @@ export default {
     safeAreaInsetBottom: {
       Type: Boolean,
       default: true
-    }
+    },
   },
   data() {
     return {
@@ -482,51 +471,52 @@ export default {
           }
         }
       }
-    }
+    };
   },
   created() {
-    let that = this
-    vk = that.vk
+    let that = this;
+    vk = that.vk;
     if (that.valueCom) {
-      that.open()
+      that.open();
     }
   },
-  mounted() {},
+  mounted() { },
   methods: {
     // 初始化
     init(notAutoClick) {
-      let that = this
+      console.log("初始化")
+      let that = this;
       // 清空之前的数据
-      that.selectArr = []
-      that.subIndex = []
-      that.selectShop = {}
-      that.selectNum = that.minBuyNum || 1
-      that.outFoStock = false
-      that.shopItemInfo = {}
-      let specListName = that.specListName
-      that.goodsInfo[specListName].map((item) => {
-        that.selectArr.push('')
-        that.subIndex.push(-1)
-      })
-      that.checkItem() // 计算sku里面规格形成路径
-      that.checkInpath(-1) // 传-1是为了不跳过循环
-      if (!notAutoClick) that.autoClickSku() // 自动选择sku策略
+      that.selectArr = [];
+      that.subIndex = [];
+      that.selectShop = {};
+      that.selectNum = that.minBuyNum || 1;
+      that.outFoStock = false;
+      that.shopItemInfo = {};
+      let specListName = that.specListName;
+      that.goodsInfo[specListName].map(item => {
+        that.selectArr.push('');
+        that.subIndex.push(-1);
+      });
+      that.checkItem(); // 计算sku里面规格形成路径
+      that.checkInpath(-1); // 传-1是为了不跳过循环
+      if (!notAutoClick) that.autoClickSku(); // 自动选择sku策略
     },
     // 使用vk路由模式框架获取商品信息
     findGoodsInfo(obj = {}) {
-      let that = this
-      let { useCache } = obj
+      let that = this;
+      let { useCache } = obj;
       if (typeof vk == 'undefined') {
-        that.toast('custom-action必须是function', 'none')
-        return false
+        that.toast('custom-action必须是function', 'none');
+        return false;
       }
-      let { actionTips } = that
-      let actionTitle = ''
-      let actionAoading = false
+      let { actionTips } = that;
+      let actionTitle = '';
+      let actionAoading = false;
       if (actionTips !== 'custom') {
-        actionTitle = useCache ? '' : '请求中...'
+        actionTitle = useCache ? '' : '请求中...';
       } else {
-        actionAoading = useCache ? false : true
+        actionAoading = useCache ? false : true;
       }
       vk.callFunction({
         url: that.action,
@@ -536,71 +526,64 @@ export default {
           goods_id: that.goodsId
         },
         success(data) {
-          that.updateGoodsInfo(data.goodsInfo)
+          that.updateGoodsInfo(data.goodsInfo);
           // 更新缓存
-          goodsCache[that.goodsId] = data.goodsInfo
-          that.$emit('update-goods', data.goodsInfo)
+          goodsCache[that.goodsId] = data.goodsInfo;
+          that.$emit('update-goods', data.goodsInfo);
         },
         fail() {
-          that.updateValue(false)
+          that.updateValue(false);
         }
-      })
+      });
     },
     updateValue(value) {
-      let that = this
+      let that = this;
       if (value) {
-        that.$emit('open', true)
-        that.$emit('input', true)
-        that.$emit('update:modelValue', true)
+        that.$emit('open', true);
+        that.$emit('input', true);
+        that.$emit('update:modelValue', true);
       } else {
-        that.$emit('input', false)
-        that.$emit('close', 'close')
-        that.$emit('update:modelValue', false)
+        that.$emit('input', false);
+        that.$emit('close', 'close');
+        that.$emit('update:modelValue', false);
       }
     },
     // 更新商品信息(库存、名称、图片)
     updateGoodsInfo(goodsInfo) {
-      let that = this
+      let that = this;
       // goodsInfo.sku_list.map((item, index) => {
       // 	item.sku_name_arr = ["20ml/瓶"];
       // });
-      let { skuListName } = that
-      if (
-        JSON.stringify(that.goodsInfo) === '{}' ||
-        that.goodsInfo[that.goodsIdName] !== goodsInfo[that.goodsIdName]
-      ) {
-        that.goodsInfo = goodsInfo
-        that.initKey = true
+      let { skuListName } = that;
+      if (JSON.stringify(that.goodsInfo) === '{}' || that.goodsInfo[that.goodsIdName] !== goodsInfo[that.goodsIdName]) {
+        that.goodsInfo = goodsInfo;
+        that.initKey = true;
       } else {
-        that.goodsInfo[skuListName] = goodsInfo[skuListName]
+        that.goodsInfo[skuListName] = goodsInfo[skuListName];
       }
       if (that.initKey) {
-        that.initKey = false
-        that.init()
+        that.initKey = false;
+        that.init();
       }
       // 更新选中sku的库存信息
-      let select_sku_info = that.getListItem(
-        that.goodsInfo[skuListName],
-        that.skuIdName,
-        that.selectShop[that.skuIdName]
-      )
-      Object.assign(that.selectShop, select_sku_info)
-      that.defaultSelectSku()
-      that.complete = true
+      let select_sku_info = that.getListItem(that.goodsInfo[skuListName], that.skuIdName, that.selectShop[that.skuIdName]);
+      Object.assign(that.selectShop, select_sku_info);
+      that.defaultSelectSku();
+      that.complete = true;
     },
     async open() {
-      let that = this
-      that.openTime = new Date().getTime()
-      let findGoodsInfoRun = true
-      let skuListName = that.skuListName
+      let that = this;
+      that.openTime = new Date().getTime();
+      let findGoodsInfoRun = true;
+      let skuListName = that.skuListName;
       // 先获取缓存中的商品信息
-      let useCache = false
-      let goodsInfo = goodsCache[that.goodsId]
+      let useCache = false;
+      let goodsInfo = goodsCache[that.goodsId];
       if (goodsInfo && that.useCache) {
-        useCache = true
-        that.updateGoodsInfo(goodsInfo)
+        useCache = true;
+        that.updateGoodsInfo(goodsInfo);
       } else {
-        that.complete = false
+        that.complete = false;
       }
       if (that.customAction && typeof that.customAction === 'function') {
         try {
@@ -611,67 +594,67 @@ export default {
               goodsInfo,
               close: function () {
                 setTimeout(function () {
-                  that.close()
-                }, 500)
+                  that.close();
+                }, 500);
               }
             })
-            .catch((err) => {
+            .catch(err => {
               setTimeout(function () {
-                that.close()
-              }, 500)
-            })
+                that.close();
+              }, 500);
+            });
         } catch (err) {
-          let { message = '' } = err
+          let { message = '' } = err;
           if (message.indexOf('.catch is not a function') > -1) {
-            that.toast('custom-action必须返回一个Promise', 'none')
+            that.toast('custom-action必须返回一个Promise', 'none');
             setTimeout(function () {
-              that.close()
-            }, 500)
-            return false
+              that.close();
+            }, 500);
+            return false;
           }
         }
         // 更新缓存
-        goodsCache[that.goodsId] = goodsInfo
+        goodsCache[that.goodsId] = goodsInfo;
         if (goodsInfo && typeof goodsInfo == 'object' && JSON.stringify(goodsInfo) != '{}') {
-          findGoodsInfoRun = false
-          that.updateGoodsInfo(goodsInfo)
-          that.updateValue(true)
+          findGoodsInfoRun = false;
+          that.updateGoodsInfo(goodsInfo);
+          that.updateValue(true);
         } else {
-          that.toast('未获取到商品信息', 'none')
-          that.$emit('input', false)
-          return false
+          that.toast('未获取到商品信息', 'none');
+          that.$emit('input', false);
+          return false;
         }
       } else if (typeof that.localdata !== 'undefined' && that.localdata !== null) {
-        goodsInfo = that.localdata
+        goodsInfo = that.localdata;
         if (goodsInfo && typeof goodsInfo == 'object' && JSON.stringify(goodsInfo) != '{}') {
-          findGoodsInfoRun = false
-          that.updateGoodsInfo(goodsInfo)
-          that.updateValue(true)
+          findGoodsInfoRun = false;
+          that.updateGoodsInfo(goodsInfo);
+          that.updateValue(true);
         } else {
-          that.toast('未获取到商品信息', 'none')
-          that.$emit('input', false)
-          return false
+          that.toast('未获取到商品信息', 'none');
+          that.$emit('input', false);
+          return false;
         }
       } else {
-        if (findGoodsInfoRun) that.findGoodsInfo({ useCache })
+        if (findGoodsInfoRun) that.findGoodsInfo({ useCache });
       }
     },
     // 监听 - 弹出层收起
     close(s) {
-      let that = this
+      let that = this;
       if (new Date().getTime() - that.openTime < 400) {
-        return false
+        return false;
       }
       if (s == 'mask') {
         if (that.maskCloseAble !== false) {
-          that.$emit('input', false)
-          that.$emit('close', 'mask')
-          that.$emit('update:modelValue', false)
+          that.$emit('input', false);
+          that.$emit('close', 'mask');
+          that.$emit('update:modelValue', false);
         }
       } else {
-        that.$emit('input', false)
-        that.$emit('close', 'close')
-        that.$emit('update:modelValue', false)
+        that.$emit('input', false);
+        that.$emit('close', 'close');
+        that.$emit('update:modelValue', false);
       }
     },
     moveHandle() {
@@ -679,91 +662,96 @@ export default {
     },
     // sku按钮的点击事件
     skuClick(value, index1, index2) {
-      let that = this
+      let that = this;
       if (value.ishow) {
         if (that.selectArr[index1] != value.name) {
-          that.$set(that.selectArr, index1, value.name)
-          that.$set(that.subIndex, index1, index2)
+          that.$set(that.selectArr, index1, value.name);
+          that.$set(that.subIndex, index1, index2);
         } else {
-          that.$set(that.selectArr, index1, '')
-          that.$set(that.subIndex, index1, -1)
+          that.$set(that.selectArr, index1, '');
+          that.$set(that.subIndex, index1, -1);
         }
-        that.checkInpath(index1)
+        that.checkInpath(index1);
         // 如果全部选完
-        that.checkSelectShop()
+        that.checkSelectShop();
       }
     },
     // 检测是否已经选完sku
     checkSelectShop() {
-      let that = this
+      let that = this;
       // 如果全部选完
-      if (that.selectArr.every((item) => item != '')) {
-        that.selectShop = that.shopItemInfo[that.getArrayToSting(that.selectArr)]
-        let stock = that.selectShop[that.stockName]
+      if (that.selectArr.every(item => item != '')) {
+        that.selectShop = that.shopItemInfo[that.getArrayToSting(that.selectArr)];
+        let stock = that.selectShop[that.stockName];
         if (typeof stock !== 'undefined' && that.selectNum > stock) {
-          that.selectNum = stock
+          that.selectNum = stock;
         }
         if (that.selectNum > that.maxBuyNum) {
-          that.selectNum = that.maxBuyNum
+          that.selectNum = that.maxBuyNum;
         }
         if (that.selectNum < that.minBuyNum) {
-          that.selectNum = that.minBuyNum
+          that.selectNum = that.minBuyNum;
         }
         if (that.selectedInit) {
-          that.selectNum = that.minBuyNum || 1
+          that.selectNum = that.minBuyNum || 1;
         }
       } else {
-        that.selectShop = {}
+        that.selectShop = {};
       }
     },
     // 检查路径
     checkInpath(clickIndex) {
-      let that = this
-      let specListName = that.specListName
+      let that = this;
+      let specListName = that.specListName;
       //console.time('筛选可选路径需要的时间是');
       //循环所有属性判断哪些属性可选
       //当前选中的兄弟节点和已选中属性不需要循环
-      let specList = that.goodsInfo[specListName]
+      let specList = that.goodsInfo[specListName];
       for (let i = 0, len = specList.length; i < len; i++) {
         if (i == clickIndex) {
-          continue
+          continue;
         }
-        let len2 = specList[i].list.length
+        let len2 = specList[i].list.length;
         for (let j = 0; j < len2; j++) {
           if (that.subIndex[i] != -1 && j == that.subIndex[i]) {
-            continue
+            continue;
           }
-          let choosed_copy = [...that.selectArr]
-          that.$set(choosed_copy, i, specList[i].list[j].name)
-          let choosed_copy2 = choosed_copy.filter((item) => item !== '' && typeof item !== 'undefined')
+          let choosed_copy = [...that.selectArr];
+          that.$set(choosed_copy, i, specList[i].list[j].name);
+          let choosed_copy2 = choosed_copy.filter(item => item !== '' && typeof item !== 'undefined');
           if (that.shopItemInfo.hasOwnProperty(that.getArrayToSting(choosed_copy2))) {
-            specList[i].list[j].ishow = true
+            specList[i].list[j].ishow = true;
           } else {
-            specList[i].list[j].ishow = false
+            specList[i].list[j].ishow = false;
           }
         }
       }
-      that.$set(that.goodsInfo, specListName, specList)
+      that.$set(that.goodsInfo, specListName, specList);
       // console.timeEnd('筛选可选路径需要的时间是');
     },
     // 计算sku里面规格形成路径
     checkItem() {
-      let that = this
+      let that = this;
       // console.time('计算有多小种可选路径需要的时间是');
-      let { stockName } = that
-      let skuListName = that.skuListName
+      let { stockName } = that;
+      let skuListName = that.skuListName;
+      console.log(skuListName)
       // 去除库存小于等于0的商品sku
-      let originalSkuList = that.goodsInfo[skuListName]
-      let skuList = []
-      let stockNum = 0
+      let originalSkuList = that.goodsInfo[skuListName];
+      console.log("进入checkItem")
+      console.log(that.goodsInfo)
+      console.log(that.goodsInfo[skuListName])
+      let skuList = [];
+      let stockNum = 0;
       originalSkuList.map((skuItem, index) => {
+        console.log(skuItem)
         if (skuItem[stockName] > 0) {
-          skuList.push(skuItem)
-          stockNum += skuItem[stockName]
+          skuList.push(skuItem);
+          stockNum += skuItem[stockName];
         }
-      })
+      });
       if (stockNum <= 0) {
-        that.outFoStock = true
+        that.outFoStock = true;
       }
       // 计算有多小种可选路径
       let result = skuList.reduce(
@@ -772,351 +760,351 @@ export default {
             items[that.skuArrName].reduce(
               (arr, item) => {
                 return arr.concat(
-                  arr.map((item2) => {
+                  arr.map(item2 => {
                     // 利用对象属性的唯一性实现二维数组去重
                     //console.log(1,that.shopItemInfo,that.getArrayToSting([...item2, item]),item2,item,items);
                     if (!that.shopItemInfo.hasOwnProperty(that.getArrayToSting([...item2, item]))) {
-                      that.shopItemInfo[that.getArrayToSting([...item2, item])] = items
+                      that.shopItemInfo[that.getArrayToSting([...item2, item])] = items;
                     }
-                    return [...item2, item]
+                    return [...item2, item];
                   })
-                )
+                );
               },
               [[]]
             )
-          )
+          );
         },
         [[]]
-      )
+      );
       // console.timeEnd('计算有多小种可选路径需要的时间是');
     },
     getArrayToSting(arr) {
-      let str = ''
+      let str = '';
       arr.map((item, index) => {
-        item = item.replace(/\./g, '。')
+        item = item.replace(/\./g, '。');
         if (index == 0) {
-          str += item
+          str += item;
         } else {
-          str += ',' + item
+          str += ',' + item;
         }
-      })
-      return str
+      });
+      return str;
     },
     // 检测sku选项是否已全部选完,且有库存
     checkSelectComplete(obj = {}) {
-      let that = this
-      let clickTime = new Date().getTime()
+      let that = this;
+      let clickTime = new Date().getTime();
       if (that.clickTime && clickTime - that.clickTime < 400) {
-        return false
+        return false;
       }
-      that.clickTime = clickTime
-      let { selectShop, selectNum, stockText, stockName } = that
+      that.clickTime = clickTime;
+      let { selectShop, selectNum, stockText, stockName } = that;
       if (!selectShop || !selectShop[that.skuIdName]) {
-        that.toast('请先选择对应规格', 'none')
-        return false
+        that.toast('请先选择对应规格', 'none');
+        return false;
       }
       if (selectNum <= 0) {
-        that.toast('购买数量必须>0', 'none')
-        return false
+        that.toast('购买数量必须>0', 'none');
+        return false;
       }
       // 判断库存
       if (selectNum > selectShop[stockName]) {
-        that.toast(stockText + '不足', 'none')
-        return false
+        that.toast(stockText + '不足', 'none');
+        return false;
       }
-      if (typeof obj.success == 'function') obj.success(selectShop)
+      if (typeof obj.success == 'function') obj.success(selectShop);
     },
     // 加入购物车
     addCart() {
-      let that = this
+      let that = this;
       that.checkSelectComplete({
         success: function (selectShop) {
-          selectShop.buy_num = that.selectNum
-          that.$emit('add-cart', selectShop)
-          that.$emit('cart', selectShop)
+          selectShop.buy_num = that.selectNum;
+          that.$emit('add-cart', selectShop);
+          that.$emit('cart', selectShop);
           // setTimeout(function() {
           // 	that.init();
           // }, 300);
         }
-      })
+      });
     },
     // 立即购买
     buyNow() {
-      let that = this
+      let that = this;
       that.checkSelectComplete({
         success: function (selectShop) {
-          selectShop.buy_num = that.selectNum
-          that.$emit('buy-now', selectShop)
-          that.$emit('buy', selectShop)
+          selectShop.buy_num = that.selectNum;
+          that.$emit('buy-now', selectShop);
+          that.$emit('buy', selectShop);
         }
-      })
+      });
     },
     // 弹窗
     toast(title, icon) {
       uni.showToast({
         title: title,
         icon: icon
-      })
+      });
     },
     // 获取对象数组中的某一个item,根据指定的键值
     getListItem(list, key, value) {
-      let that = this
-      let item
+      let that = this;
+      let item;
       for (let i in list) {
         if (typeof value == 'object') {
           if (JSON.stringify(list[i][key]) === JSON.stringify(value)) {
-            item = list[i]
-            break
+            item = list[i];
+            break;
           }
         } else {
           if (list[i][key] === value) {
-            item = list[i]
-            break
+            item = list[i];
+            break;
           }
         }
       }
-      return item
+      return item;
     },
     getListIndex(list, key, value) {
-      let that = this
-      let index = -1
+      let that = this;
+      let index = -1;
       for (let i = 0; i < list.length; i++) {
         if (list[i][key] === value) {
-          index = i
-          break
+          index = i;
+          break;
         }
       }
-      return index
+      return index;
     },
     // 自动选择sku前提是只有一组sku,默认自动选择最前面的有库存的sku
     autoClickSku() {
-      let that = this
-      let { stockName } = that
-      let skuList = that.goodsInfo[that.skuListName]
-      let specListArr = that.goodsInfo[that.specListName]
+      let that = this;
+      let { stockName } = that;
+      let skuList = that.goodsInfo[that.skuListName];
+      let specListArr = that.goodsInfo[that.specListName];
       if (specListArr.length == 1) {
-        let specList = specListArr[0].list
+        let specList = specListArr[0].list;
         for (let i = 0; i < specList.length; i++) {
-          let sku = that.getListItem(skuList, that.skuArrName, [specList[i].name])
+          let sku = that.getListItem(skuList, that.skuArrName, [specList[i].name]);
           if (sku && sku[stockName] > 0) {
-            that.skuClick(specList[i], 0, i)
-            break
+            that.skuClick(specList[i], 0, i);
+            break;
           }
         }
       }
     },
     // 主题颜色
     themeColorFn(name) {
-      let that = this
-      let { theme, themeColor } = that
-      let color = that[name] ? that[name] : themeColor[theme][name]
-      return color
+      let that = this;
+      let { theme, themeColor } = that;
+      let color = that[name] ? that[name] : themeColor[theme][name];
+      return color;
     },
     defaultSelectSku() {
-      let that = this
-      let { defaultSelect } = that
+      let that = this;
+      let { defaultSelect } = that;
       if (defaultSelect && defaultSelect.sku && defaultSelect.sku.length > 0) {
-        that.selectSku(defaultSelect)
+        that.selectSku(defaultSelect);
       }
     },
     /**
-			 * 主动方法 - 设置sku
-			that.$refs.skuPopup.selectSku({
-				sku:["红色","256G","公开版"],
-				num:5
-			});
-			 */
+       * 主动方法 - 设置sku
+      that.$refs.skuPopup.selectSku({
+        sku:["红色","256G","公开版"],
+        num:5
+      });
+       */
     selectSku(obj = {}) {
-      let that = this
-      let { sku: skuArr, num: selectNum } = obj
-      let specListArr = that.goodsInfo[that.specListName]
+      let that = this;
+      let { sku: skuArr, num: selectNum } = obj;
+      let specListArr = that.goodsInfo[that.specListName];
       if (skuArr && specListArr.length === skuArr.length) {
         // 先清空
-        let skuClickArr = []
-        let clickKey = true
+        let skuClickArr = [];
+        let clickKey = true;
         for (let index = 0; index < skuArr.length; index++) {
-          let skuName = skuArr[index]
-          let specList = specListArr[index].list
-          let index1 = index
-          let index2 = that.getListIndex(specList, 'name', skuName)
+          let skuName = skuArr[index];
+          let specList = specListArr[index].list;
+          let index1 = index;
+          let index2 = that.getListIndex(specList, 'name', skuName);
           if (index2 == -1) {
-            clickKey = false
-            break
+            clickKey = false;
+            break;
           }
           skuClickArr.push({
             spec: specList[index2],
             index1: index1,
             index2: index2
-          })
+          });
         }
         if (clickKey) {
-          that.init(true)
-          skuClickArr.map((item) => {
-            that.skuClick(item.spec, item.index1, item.index2)
-          })
+          that.init(true);
+          skuClickArr.map(item => {
+            that.skuClick(item.spec, item.index1, item.index2);
+          });
         }
       }
-      if (selectNum > 0) that.selectNum = selectNum
+      if (selectNum > 0) that.selectNum = selectNum;
     },
     priceFilter(n = 0) {
-      let that = this
+      let that = this;
       if (typeof n == 'string') {
-        n = parseFloat(n)
+        n = parseFloat(n);
       }
       if (that.amountType === 0) {
-        return n.toFixed(2)
+        return n.toFixed(2);
       } else {
-        return (n / 100).toFixed(2)
+        return (n / 100).toFixed(2);
       }
     },
     pushGoodsCache(goodsInfo) {
-      let that = this
-      let { goodsIdName } = that
-      goodsCache[goodsInfo[goodsIdName]] = goodsInfo
+      let that = this;
+      let { goodsIdName } = that;
+      goodsCache[goodsInfo[goodsIdName]] = goodsInfo;
     },
     // 用于阻止冒泡
-    stop() {},
+    stop() { },
     // 图片预览
     previewImage() {
-      let that = this
-      let { selectShop, goodsInfo, goodsThumbName } = that
-      let src = selectShop.image ? selectShop.image : goodsInfo[goodsThumbName]
+      let that = this;
+      let { selectShop, goodsInfo, goodsThumbName } = that;
+      let src = selectShop.image ? selectShop.image : goodsInfo[goodsThumbName];
       if (src) {
         uni.previewImage({
           urls: [src]
-        })
+        });
       }
     },
     getMaxStock() {
-      let maxStock = 0
-      let that = this
-      let { selectShop = {}, goodsInfo = {}, skuListName, stockName } = that
+      let maxStock = 0;
+      let that = this;
+      let { selectShop = {}, goodsInfo = {}, skuListName, stockName } = that;
       if (selectShop[stockName]) {
-        maxStock = selectShop[stockName]
+        maxStock = selectShop[stockName];
       } else {
-        let skuList = goodsInfo[skuListName]
+        let skuList = goodsInfo[skuListName];
         if (skuList && skuList.length > 0) {
-          let valueArr = []
+          let valueArr = [];
           skuList.map((skuItem, index) => {
-            valueArr.push(skuItem[stockName])
-          })
-          let max = Math.max(...valueArr)
-          maxStock = max
+            valueArr.push(skuItem[stockName]);
+          });
+          let max = Math.max(...valueArr);
+          maxStock = max;
         }
       }
-      return maxStock
+      return maxStock;
     },
     numChange(e) {
-      this.$emit('num-change', e.value)
+      this.$emit("num-change", e.value);
     }
   },
   // 计算属性
   computed: {
     valueCom() {
       // #ifndef VUE3
-      return this.value
+      return this.value;
       // #endif
 
       // #ifdef VUE3
-      return this.modelValue
+      return this.modelValue;
       // #endif
     },
     // 最大购买数量
     maxBuyNumCom() {
-      let that = this
-      let maxStock = that.getMaxStock()
-      let max = that.maxBuyNum || 100000
+      let that = this;
+      let maxStock = that.getMaxStock();
+      let max = that.maxBuyNum || 100000;
       // 最大购买量不能超过当前商品的库存
       if (max > maxStock) {
-        max = maxStock
+        max = maxStock;
       }
-      return max
+      return max;
     },
     // 是否是多规格
     isManyCom() {
-      let that = this
-      let { goodsInfo, defaultSingleSkuName, specListName } = that
-      let isMany = true
+      let that = this;
+      let { goodsInfo, defaultSingleSkuName, specListName } = that;
+      let isMany = true;
       if (
         goodsInfo[specListName] &&
         goodsInfo[specListName].length === 1 &&
         goodsInfo[specListName][0].list.length === 1 &&
         goodsInfo[specListName][0].name === defaultSingleSkuName
       ) {
-        isMany = false
+        isMany = false;
       }
-      return isMany
+      return isMany;
     },
     // 默认价格区间计算
     priceCom() {
-      let str = ''
-      let that = this
-      let { selectShop = {}, goodsInfo = {}, skuListName, skuIdName } = that
+      let str = '';
+      let that = this;
+      let { selectShop = {}, goodsInfo = {}, skuListName, skuIdName } = that;
       if (selectShop[skuIdName]) {
-        str = that.priceFilter(selectShop.price)
+        str = that.priceFilter(selectShop.price);
       } else {
-        let skuList = goodsInfo[skuListName]
+        let skuList = goodsInfo[skuListName];
         if (skuList && skuList.length > 0) {
-          let valueArr = []
+          let valueArr = [];
           skuList.map((skuItem, index) => {
-            valueArr.push(skuItem.price)
-          })
-          let min = that.priceFilter(Math.min(...valueArr))
-          let max = that.priceFilter(Math.max(...valueArr))
+            valueArr.push(skuItem.price);
+          });
+          let min = that.priceFilter(Math.min(...valueArr));
+          let max = that.priceFilter(Math.max(...valueArr));
           if (min === max) {
-            str = min + ''
+            str = min + '';
           } else {
-            str = `${min} - ${max}`
+            str = `${min} - ${max}`;
           }
         }
       }
-      return str
+      return str;
     },
     // 库存显示
     stockCom() {
-      let str = ''
-      let that = this
-      let { selectShop = {}, goodsInfo = {}, skuListName, stockName } = that
+      let str = '';
+      let that = this;
+      let { selectShop = {}, goodsInfo = {}, skuListName, stockName } = that;
       if (selectShop[stockName]) {
-        str = selectShop[stockName]
+        str = selectShop[stockName];
       } else {
-        let skuList = goodsInfo[skuListName]
+        let skuList = goodsInfo[skuListName];
         if (skuList && skuList.length > 0) {
-          let valueArr = []
+          let valueArr = [];
           skuList.map((skuItem, index) => {
-            valueArr.push(skuItem[stockName])
-          })
-          let min = Math.min(...valueArr)
-          let max = Math.max(...valueArr)
+            valueArr.push(skuItem[stockName]);
+          });
+          let min = Math.min(...valueArr);
+          let max = Math.max(...valueArr);
           if (min === max) {
-            str = min
+            str = min;
           } else {
-            str = `${min} - ${max}`
+            str = `${min} - ${max}`;
           }
         }
       }
-      return str
+      return str;
     }
   },
   watch: {
     valueCom(newVal, oldValue) {
-      let that = this
+      let that = this;
       if (newVal) {
-        that.open()
+        that.open();
       }
     },
     defaultGoods: {
       immediate: true,
       handler: function (newVal, oldValue) {
-        let that = this
-        let { goodsIdName } = that
+        let that = this;
+        let { goodsIdName } = that;
         if (typeof newVal === 'object' && newVal && newVal[goodsIdName] && !goodsCache[newVal[goodsIdName]]) {
-          that.pushGoodsCache(newVal)
+          that.pushGoodsCache(newVal);
         }
       }
     }
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -1129,6 +1117,7 @@ export default {
   bottom: 0;
   z-index: 990;
   overflow: hidden;
+
   &.show {
     display: block;
 
@@ -1155,6 +1144,7 @@ export default {
   &.none {
     display: none;
   }
+
   .mask {
     position: fixed;
     top: 0;
@@ -1163,6 +1153,7 @@ export default {
     z-index: 1;
     background-color: rgba(0, 0, 0, 0.3);
   }
+
   .layer {
     display: flex;
     width: 100%;
@@ -1180,10 +1171,12 @@ export default {
       width: 100%;
       padding: 30rpx 25rpx;
       box-sizing: border-box;
+
       .specification-wrapper-content {
         width: 100%;
         max-height: 900rpx;
         min-height: 300rpx;
+
         &::-webkit-scrollbar {
           /*隐藏滚轮*/
           display: none;
@@ -1228,6 +1221,7 @@ export default {
                 margin-left: 4rpx;
                 font-size: 48rpx;
               }
+
               .price2 {
                 margin-left: 4rpx;
                 font-size: 36rpx;
@@ -1279,6 +1273,7 @@ export default {
                 margin-bottom: 16rpx;
                 border: 1px solid #f4f4f4;
                 box-sizing: border-box;
+
                 &.actived {
                   border-color: #fe560a;
                   color: #fe560a;
@@ -1292,12 +1287,14 @@ export default {
               }
             }
           }
+
           .number-box-view {
             display: flex;
             padding-top: 30rpx;
           }
         }
       }
+
       .close {
         position: absolute;
         top: 30rpx;
@@ -1306,12 +1303,14 @@ export default {
         height: 50rpx;
         text-align: center;
         line-height: 50rpx;
+
         .close-item {
           width: 50rpx;
           height: 50rpx;
         }
       }
     }
+
     .btn-wrapper {
       display: flex;
       width: 100%;
@@ -1321,6 +1320,7 @@ export default {
       justify-content: space-between;
       padding: 0 26rpx;
       box-sizing: border-box;
+
       .layer-btn {
         width: 335rpx;
         height: 76rpx;
@@ -1339,6 +1339,7 @@ export default {
           background: #fe560a;
         }
       }
+
       .sure {
         width: 698rpx;
         height: 68rpx;
@@ -1350,10 +1351,12 @@ export default {
         font-size: 28rpx;
         background: #fe560a;
       }
+
       .sure.add-cart {
         background: #ff9402;
       }
     }
+
     .btn-wrapper.safe-area-inset-bottom {
       padding-bottom: 0;
       padding-bottom: constant(safe-area-inset-bottom);

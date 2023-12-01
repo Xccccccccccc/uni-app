@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 const activeIndex = ref(0)
-// 当 swiper 下标发生变化时触发
 const onChange: UniHelper.SwiperOnChange = (ev) => {
   activeIndex.value = ev.detail.current
 }
-// 定义 props 接收
 defineProps<{
   list: BannerItem[]
 }>()
 </script>
-
 <template>
   <view class="carousel">
     <swiper :circular="true" :autoplay="false" :interval="3000" @change="onChange">
@@ -31,12 +27,12 @@ defineProps<{
     </view>
   </view>
 </template>
-
 <style lang="scss">
 :host {
   display: block;
   height: 280rpx;
 }
+
 /* 轮播图 */
 .carousel {
   height: 100%;
@@ -44,6 +40,7 @@ defineProps<{
   overflow: hidden;
   transform: translateY(0);
   background-color: #efefef;
+
   .indicator {
     position: absolute;
     left: 0;
@@ -51,17 +48,20 @@ defineProps<{
     bottom: 16rpx;
     display: flex;
     justify-content: center;
+
     .dot {
       width: 30rpx;
       height: 6rpx;
-      margin: 0 8rpx;
+      margin: 08rpx;
       border-radius: 6rpx;
       background-color: rgba(255, 255, 255, 0.4);
     }
+
     .active {
       background-color: #fff;
     }
   }
+
   .navigator,
   .image {
     width: 100%;

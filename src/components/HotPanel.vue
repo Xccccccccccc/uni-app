@@ -1,10 +1,9 @@
 <script setup lang="ts">
-//
+//定义props接收数据
 defineProps<{
   list: HotItem[]
 }>()
 </script>
-
 <template>
   <!-- 推荐专区 -->
   <view class="panel hot">
@@ -14,14 +13,13 @@ defineProps<{
         <text class="title-desc">{{ item.alt }}</text>
       </view>
       <navigator hover-class="none" :url="`/pages/hot/hot?type=${item.id}&title=${item.title}`" class="cards">
-        <image v-for="src in item.pictures" :key="src" class="image" mode="aspectFit" :src="src"></image>
+        <image class="image" mode="aspectFit" v-for="src in item.pictures" :key="src" :src="src"></image>
       </navigator>
     </view>
   </view>
 </template>
-
 <style lang="scss">
-/* 热门推荐 */
+/* 热⻔推荐 */
 .hot {
   display: flex;
   flex-wrap: wrap;
@@ -50,8 +48,8 @@ defineProps<{
     flex-direction: column;
     width: 50%;
     height: 254rpx;
-    border-right: 1rpx solid #eee;
-    border-top: 1rpx solid #eee;
+    border-right: 1rpx solid#eee;
+    border-top: 1rpx solid#eee;
 
     .title {
       justify-content: start;

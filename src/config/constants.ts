@@ -13,7 +13,6 @@ export enum OrderState {
   /** 已取消 */
   YiQuXiao = 6
 }
-
 /** 订单状态列表 */
 export const orderStateList = [
   { id: 0, text: '' },

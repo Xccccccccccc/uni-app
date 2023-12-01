@@ -10,7 +10,6 @@ export function createApp() {
 
   app.use(pinia)
   return {
-    app,
-    pinia
+    app
   }
 }

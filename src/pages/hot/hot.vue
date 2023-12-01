@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getHotRecommendAPI } from '@/api/home.api'
 // uniapp 获取页面参数
 const query = defineProps<{
   type: string

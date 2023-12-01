@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { codeToText } from '@/utils/element-china-area-data.mjs'
+import { putMemberAddressByIdAPI, getMemberAddressByIdAPI, postMemberAddressAPI } from '@/api/address.api'
 // 表单数据
 const form = ref({
   receiver: '', // 收货人

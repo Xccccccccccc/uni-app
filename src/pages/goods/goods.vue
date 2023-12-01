@@ -1,146 +1,124 @@
 <script setup lang="ts">
-import { onLoad } from '@dcloudio/uni-app'
+/* eslint-disable */
 import AddressPanel from './components/AddressPanel.vue'
-import ServicePanelVue from './components/ServicePanel.vue'
-
-import type {
-  SkuPopupEvent,
-  SkuPopupInstance,
-  SkuPopupLocaldata
-} from '@/components/vk-data-goods-sku-popup/vk-data-goods-sku-popup'
-
-// 获取屏幕边界到安全区域距离
+import ServicePanel from './components/ServicePanel.vue'
+import { getGoodsByIdAPI } from '@/api/goods.api';
+import { postMemberCartAPI } from '@/api/cart.api'
+import type { SkuPopupLocaldata } from '../../types/vk-data-goods-sku-popup'
+import type { SkuPopupInstance } from '../../types/vk-data-goods-sku-popup'
+import type { SkuPopupEvent } from '../../types/vk-data-goods-sku-popup'
 const { safeAreaInsets } = uni.getSystemInfoSync()
-
-//定义枚举，按钮模式
-enum SkuMode {
-  Both = 1,
-  Cart = 2,
-  Buy = 3
-}
-
-const mode = ref<SkuMode>(SkuMode.Cart)
-
-//打开SKU弹窗修改按钮模式
-const openSkuPopup = (val: SkuMode) => {
-  //显示SKU弹窗
-  isShowSku.value = true
-  //修改按钮模式
-  mode.value = val
-}
-
-const query = defineProps<{
-  id: string
-}>()
-
-// 获取商品详细信息
-const goods = ref<GoodsResult>()
-const getGoodsByIdData = async () => {
-  const res = await getGoodsByIdAPI(query.id)
-  goods.value = res.result
-  console.log(res.result.specs)
-
-  // SKU组件所需格式
-  localdata.value = {
-    _id: res.result.id,
-    name: res.result.name,
-    goods_thumb: res.result.mainPictures[0],
-    spec_list: res.result.specs.map((v) => ({ name: v.name, list: v.value })),
-    sku_list: res.result.skus.map((v) => ({
-      _id: v.id,
-      goods_id: res.result.id,
-      goods_name: res.result.name,
-      image: v.cover,
-      price: v.price * 100, // 注意：需要乘以 100
-      stock: v.inventory,
-      sku_name_arr: v.specs.map((vv) => vv.valueName)
-    }))
-  }
-}
-
-onLoad(() => {
-  getGoodsByIdData()
-})
-
-//轮播变化时
-const currentIndex = ref(0)
-const onChange: UniHelper.SwiperOnChange = (ev) => {
-  currentIndex.value = ev.detail.current
-}
-
-const onTapImage = (url: string) => {
-  //大图预览
-  uni.previewImage({
-    current: url,
-    urls: goods.value!.mainPictures
-  })
-}
-
-//uni-ui 弹出层组件 ref
-const popup = ref<{
-  open: (type?: UniHelper.UniPopupType) => void
-  close: () => void
-}>()
-
-//弹出层条件渲染
-const popupName = ref<'address' | 'service'>()
-const openPopup = (name: typeof popupName.value) => {
-  //修改弹出层名称
-  popupName.value = name
-  //打开弹出层
-  popup.value?.open()
-}
-
-// 是否显示SKU组件
-const isShowSku = ref(false)
-// 商品信息
-const localdata = ref({} as SkuPopupLocaldata)
-
-//SKU组件实例
-const skuPopuRef = ref<SkuPopupInstance>()
-//计算被选中给的值
-const selectArrText = computed(() => {
-  return skuPopuRef.value?.selectArr?.join(' ').trim() || '请选择商品规格'
-})
-
-//加入购物车
-const onAddCart = async (ev: SkuPopupEvent) => {
-  await postMemberCartAPI({ attrsText: selectArrText.value, count: ev.buy_num, id: ev.goods_id })
-  uni.showToast({ title: '添加成功' })
-  isShowSku.value = false
-}
-
+// 立即购买
 const onBuyNow = (ev: SkuPopupEvent) => {
   uni.navigateTo({
     url: `/pagesOrder/create/create?id=${ev.goods_id}&count=${ev.buy_num}&attrsText=${selectArrText.value}`
   })
 }
-</script>
+// 接收⻚面参数
+const query = defineProps<{ id: string }>()
+// 获取商品详情信息
+const goods = ref<GoodsResult>()
+//获取商品同类推荐信息
+const getGoodsByIdData = async () => {
+  const res = await getGoodsByIdAPI(query.id)
+  goods.value = res.result
+  //sku组件所需格式
+  localdata.value = {
+    _id: res.result.id,
+    name: res.result.name,
+    goods_thumb: res.result.mainPictures[0],
+    spec_list: res.result.specs.map((v) => ({
+      name: v.name,
+      list: v.value
+    })
+    ),
+    sku_list: res.result.skus.map((v) => ({
+      _id: v.id,
+      goods_id: res.result.id,
+      goods_name: res.result.name,
+      image: v.cover,
+      price: v.price * 100,
+      // 注意：需要乘以 100
+      stock: v.inventory,
+      sku_name_arr: v.specs.map(
+        (vv) => vv.valueName),
+    }))
+    ,
+  }
+}
+// 是否显示SKU组件
+const isShowSku = ref(false)
 
+enum SkuMode {
+  Both = 1, Cart = 2, Buy = 3,
+}
+const mode = ref<SkuMode>(SkuMode.Cart)
+// 打开SKU弹窗修改按钮模式
+const openSkuPopup = (val: SkuMode) => {
+  // 显示SKU弹窗
+  isShowSku.value = true
+  // 修改按钮模式
+  mode.value = val
+}
+// 加入购物⻋事件
+const onAddCart = async (ev: SkuPopupEvent) => {
+  await postMemberCartAPI({
+    attrsText: selectArrText.value,
+    count: ev.buy_num,
+    id: ev.goods_id
+  })
+  uni.showToast({ title: '添加成功' })
+  isShowSku.value = false
+}
+
+// 商品信息
+const localdata = ref({} as SkuPopupLocaldata)
+// ⻚面加载
+onLoad(() => { getGoodsByIdData() })
+// 轮播图变化时
+const currentIndex = ref(0)
+const onChange: UniHelper.SwiperOnChange = (ev) => {
+  currentIndex.value = ev.detail.current
+}
+const skuPopupRef = ref<SkuPopupInstance>()
+// 计算被选中的值
+const selectArrText = computed(() => {
+  return skuPopupRef.value?.selectArr?.join(' ').trim() || '请选择商品规格'
+})
+// 点击图片时
+const onTapImage = (url: string) => {
+  // 大图预览
+  uni.previewImage({
+    current: url,
+    urls: goods.value!.mainPictures
+  })
+}
+// uni-ui 弹出层组件ref
+const popup = ref<{
+  open: (type?: any) => void
+  close: () => void
+}>()
+// 弹出层条件渲染
+const popupName = ref<'address' | 'service'>()
+const openPopup = (name: typeof popupName.value) => {
+  // 修改弹出层名称
+  popupName.value = name
+  // 打开弹出层
+  popup.value?.open()
+}
+</script>
 <template>
-  <!-- SKU弹窗组件 -->
-  <vk-data-goods-sku-popup
-    @add-cart="onAddCart"
-    @buy-now="onBuyNow"
-    v-model="isShowSku"
-    :localdata="localdata"
-    :mode="mode"
-    add-cart-background-color="#FFA868"
-    buy-now-background-color="27BA9B"
-    ref="skuPopuRef"
-    ：actived-style="{
-      color: '#27BA9B',
-      borderColor: '#27BA9B',
-      backgroundColor: '#E9F8F5'
-    }"
-  />
-  <!-- 弹窗测试 -->
   <scroll-view scroll-y class="viewport">
+    <vk-data-goods-sku-popup v-model="isShowSku" @add-cart="onAddCart" :localdata="localdata" :mode="mode"
+      @buy-now="onBuyNow" add-cart-background-color="#FFA868" buy-now-background-color="#27BA9B" ref="skuPopupRef"
+      :actived-style="{ color: '#27BA9B', borderColor: '#27BA9B', backgroundColor: '#E9F8F5', }" />
+    <!-- 弹窗测试 -->
+    <button @tap="isShowSku = true">打开 SKU 弹窗</button>
     <!-- 基本信息 -->
     <view class="goods">
       <!-- 商品主图 -->
       <view class="preview">
-        <swiper circular @change="onChange">
+        <swiper @change="onChange" circular>
           <swiper-item v-for="item in goods?.mainPictures" :key="item">
             <image @tap="onTapImage(item)" mode="aspectFill" :src="item" />
           </swiper-item>
@@ -148,42 +126,47 @@ const onBuyNow = (ev: SkuPopupEvent) => {
         <view class="indicator">
           <text class="current">{{ currentIndex + 1 }}</text>
           <text class="split">/</text>
-          <text class="total">{{ goods?.mainPictures.length }}</text>
+          <text class="total">
+            {{ goods?.mainPictures.length }}
+          </text>
         </view>
       </view>
-
       <!-- 商品简介 -->
       <view class="meta">
         <view class="price">
           <text class="symbol">¥</text>
           <text class="number">{{ goods?.price }}</text>
         </view>
-        <view class="name ellipsis">{{ goods?.name }} </view>
-        <view class="desc"> {{ goods?.description }} </view>
+        <view class="name ellipsis">
+          {{ goods?.name }}
+        </view>
+        <view class="desc">
+          {{ goods?.desc }}
+        </view>
       </view>
-
       <!-- 操作面板 -->
       <view class="action">
-        <view class="item arrow">
-          <text class="label">选择</text>
-          <view @tap="openSkuPopup(SkuMode.Both)" class="text ellipsis"> {{ selectArrText }} </view>
+        <view @tap="openSkuPopup(SkuMode.Both)" class="item arrow">
+          <text class=" label">选择</text>
+          <text class="text ellipsis">{{ selectArrText }}</text>
         </view>
-        <view class="item arrow" @tap="openPopup('address')">
+
+        <view @tap="openPopup('address')" class="item arrow">
           <text class="label">送至</text>
-          <text class="text ellipsis"> 请选择收获地址 </text>
+          <text class="text ellipsis">请选择收获地址</text>
         </view>
-        <view class="item arrow" @tap="openPopup('service')">
+        <view @tap="openPopup('service')" class="item arrow">
           <text class="label">服务</text>
-          <text class="text ellipsis"> 无忧退 快速退款 免费包邮 </text>
+          <text class="text ellipsis">无忧退快速退款免费包邮</text>
         </view>
       </view>
     </view>
 
+    <!-- uni-ui 弹出层 -->
     <uni-popup ref="popup" type="bottom" background-color="#fff">
       <AddressPanel v-if="popupName === 'address'" @close="popup?.close()" />
-      <ServicePanelVue v-if="popupName === 'service'" @close="popup?.close()" />
+      <ServicePanel v-if="popupName === 'service'" @close="popup?.close()" />
     </uni-popup>
-
     <!-- 商品详情 -->
     <view class="detail panel">
       <view class="title">
@@ -192,30 +175,26 @@ const onBuyNow = (ev: SkuPopupEvent) => {
       <view class="content">
         <view class="properties">
           <!-- 属性详情 -->
-          <view class="item" v-for="item in goods?.properties" :key="item.name">
+          <view class="item" v-for="item in goods?.properties" :key="item">
             <text class="label">{{ item.name }}</text>
             <text class="value">{{ item.value }}</text>
           </view>
         </view>
         <!-- 图片详情 -->
-        <image mode="widthFix" v-for="item in goods?.productPictures" :key="item" :src="item"></image>
+        <image mode="widthFix" src="//yanxuan-item.nosdn.127.net/a8d266886d31f6eb0d7333c815769305.jpg"></image>
+        <image mode="widthFix" src="//yanxuan-item.nosdn.127.net/a9bee1cb53d72e6cdcda210071cbd46a.jpg"></image>
       </view>
     </view>
-
     <!-- 同类推荐 -->
     <view class="similar panel">
       <view class="title">
         <text>同类推荐</text>
       </view>
       <view class="content">
-        <navigator
-          v-for="item in goods?.similarProducts"
-          :key="item.id"
-          class="goods"
-          hover-class="none"
-          :url="`/pages/goods/goods?id=${item.id}`"
-        >
-          <image class="image" mode="aspectFill" :src="item.picture"></image>
+        <navigator v-for="item in goods?.similarProducts" :key="item" class="goods" hover-class="none"
+          :url="`/pages/goods/goods?id=`">
+          <image class="image" mode="aspectFill" :src="item.picture">
+          </image>
           <view class="name ellipsis">{{ item.name }}</view>
           <view class="price">
             <text class="symbol">¥</text>
@@ -225,22 +204,28 @@ const onBuyNow = (ev: SkuPopupEvent) => {
       </view>
     </view>
   </scroll-view>
-
   <!-- 用户操作 -->
   <view class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
     <view class="icons">
-      <button class="icons-button"><text class="icon-heart"></text>收藏</button>
-      <button class="icons-button" open-type="contact"> <text class="icon-handset"></text>客服 </button>
-      <navigator class="icons-button" url="/pages/cart/cart2" open-type="navigate">
-        <text class="icon-cart"></text>购物车
+      <button class="icons-button">
+        <text class="icon-heart"></text>
+        收藏</button>
+      <button class="icons-button" open-type="contact">
+        <text class="icon-handset"></text>
+        客服</button>
+      <navigator class="icons-button" url="/pages/cart/cart" open-type="switchTab">
+        <text class="icon-cart"></text>购物⻋
       </navigator>
     </view>
     <view class="buttons">
-      <view @tap="openSkuPopup(SkuMode.Cart)" class="addcart"> 加入购物车 </view>
-      <view @tap="openSkuPopup(SkuMode.Buy)" class="buynow" @click="onBuyNow"> 立即购买 </view>
+
+      <!-- 显示一个按钮 -->
+      <view @tap="openSkuPopup(SkuMode.Cart)" class="addcart"> 加入购物⻋</view>
+      <view @tap="openSkuPopup(SkuMode.Buy)" class="payment"> 立即购买</view>
     </view>
   </view>
 </template>
+
 
 <style lang="scss">
 page {
@@ -257,6 +242,7 @@ page {
 .panel {
   margin-top: 20rpx;
   background-color: #fff;
+
   .title {
     display: flex;
     justify-content: space-between;
@@ -265,6 +251,7 @@ page {
     line-height: 1;
     padding: 30rpx 60rpx 30rpx 6rpx;
     position: relative;
+
     text {
       padding-left: 10rpx;
       font-size: 28rpx;
@@ -272,6 +259,7 @@ page {
       font-weight: 600;
       border-left: 4rpx solid #27ba9b;
     }
+
     navigator {
       font-size: 24rpx;
       color: #666;
@@ -295,13 +283,16 @@ page {
 /* 商品信息 */
 .goods {
   background-color: #fff;
+
   .preview {
     height: 750rpx;
     position: relative;
+
     .image {
       width: 750rpx;
       height: 750rpx;
     }
+
     .indicator {
       height: 40rpx;
       padding: 0 24rpx;
@@ -313,21 +304,26 @@ page {
       position: absolute;
       bottom: 30rpx;
       right: 30rpx;
+
       .current {
         font-size: 26rpx;
       }
+
       .split {
         font-size: 24rpx;
         margin: 0 1rpx 0 2rpx;
       }
+
       .total {
         font-size: 24rpx;
       }
     }
   }
+
   .meta {
     position: relative;
     border-bottom: 1rpx solid #eaeaea;
+
     .price {
       height: 130rpx;
       padding: 25rpx 30rpx 0;
@@ -336,9 +332,11 @@ page {
       box-sizing: border-box;
       background-color: #35c8a9;
     }
+
     .number {
       font-size: 56rpx;
     }
+
     .brand {
       width: 160rpx;
       height: 80rpx;
@@ -347,6 +345,7 @@ page {
       top: 26rpx;
       right: 30rpx;
     }
+
     .name {
       max-height: 88rpx;
       line-height: 1.4;
@@ -354,6 +353,7 @@ page {
       font-size: 32rpx;
       color: #333;
     }
+
     .desc {
       line-height: 1;
       padding: 0 20rpx 30rpx;
@@ -361,8 +361,10 @@ page {
       color: #cf4444;
     }
   }
+
   .action {
     padding-left: 20rpx;
+
     .item {
       height: 90rpx;
       padding-right: 60rpx;
@@ -372,15 +374,18 @@ page {
       position: relative;
       display: flex;
       align-items: center;
+
       &:last-child {
         border-bottom: 0 none;
       }
     }
+
     .label {
       width: 60rpx;
       color: #898b94;
       margin: 0 16rpx 0 10rpx;
     }
+
     .text {
       flex: 1;
       -webkit-line-clamp: 1;
@@ -391,15 +396,19 @@ page {
 /* 商品详情 */
 .detail {
   padding-left: 20rpx;
+
   .content {
     margin-left: -20rpx;
+
     .image {
       width: 100%;
     }
   }
+
   .properties {
     padding: 0 20rpx;
     margin-bottom: 30rpx;
+
     .item {
       display: flex;
       line-height: 2;
@@ -408,9 +417,11 @@ page {
       color: #333;
       border-bottom: 1rpx dashed #ccc;
     }
+
     .label {
       width: 200rpx;
     }
+
     .value {
       flex: 1;
     }
@@ -424,6 +435,7 @@ page {
     background-color: #f4f4f4;
     display: flex;
     flex-wrap: wrap;
+
     .goods {
       width: 340rpx;
       padding: 24rpx 20rpx 20rpx;
@@ -431,26 +443,31 @@ page {
       border-radius: 10rpx;
       background-color: #fff;
     }
+
     .image {
       width: 300rpx;
       height: 260rpx;
     }
+
     .name {
       height: 80rpx;
       margin: 10rpx 0;
       font-size: 26rpx;
       color: #262626;
     }
+
     .price {
       line-height: 1;
       font-size: 20rpx;
       color: #cf4444;
     }
+
     .number {
       font-size: 26rpx;
       margin-left: 2rpx;
     }
   }
+
   navigator {
     &:nth-child(even) {
       margin-right: 0;
@@ -473,9 +490,11 @@ page {
   justify-content: space-between;
   align-items: center;
   box-sizing: content-box;
+
   .buttons {
     display: flex;
-    & > view {
+
+    &>view {
       width: 220rpx;
       text-align: center;
       line-height: 72rpx;
@@ -483,20 +502,24 @@ page {
       color: #fff;
       border-radius: 72rpx;
     }
+
     .addcart {
       background-color: #ffa868;
     }
+
     .buynow,
     .payment {
       background-color: #27ba9b;
       margin-left: 20rpx;
     }
   }
+
   .icons {
     padding-right: 10rpx;
     display: flex;
     align-items: center;
     flex: 1;
+
     .icons-button {
       flex: 1;
       text-align: center;
@@ -507,10 +530,12 @@ page {
       font-size: 20rpx;
       color: #333;
       background-color: #fff;
+
       &::after {
         border: none;
       }
     }
+
     text {
       display: block;
       font-size: 34rpx;

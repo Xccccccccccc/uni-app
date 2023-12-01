@@ -26,7 +26,7 @@ const query = defineProps<{
     </view>
 
     <!-- 猜你喜欢 -->
-    <Guess ref="guessRef" />
+    <wGuess ref="guessRef" />
   </scroll-view>
 </template>
 

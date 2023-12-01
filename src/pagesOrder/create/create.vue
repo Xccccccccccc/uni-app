@@ -1,38 +1,27 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { codeToText } from '@/utils/element-china-area-data.mjs'
-
-// 页面参数
+import {
+  getMemberOrderPreNowAPI,
+  getMemberOrderPreAPI,
+  getMemberOrderRepurchaseByIdAPI,
+  postMemberOrderAPI
+} from '@/api/order.api'
+import { useAddressStore } from '@/stores/modules/address'
 const query = defineProps<{
   id?: string
   count?: string
   attrsText?: string
   orderId?: string
 }>()
-
-// 获取屏幕边界到安全区域距离
-const { safeAreaInsets } = uni.getSystemInfoSync()
-// 订单备注
-const buyerMessage = ref('')
-// 配送时间
-const deliveryList = ref([
-  { type: 1, text: '时间不限 (周一至周日)' },
-  { type: 2, text: '工作日送 (周一至周五)' },
-  { type: 3, text: '周末配送 (周六至周日)' }
-])
-// 当前配送时间下标
-const activeIndex = ref(0)
-// 当前配送时间
-const activeDelivery = computed(() => deliveryList.value[activeIndex.value])
-// 修改配送时间
-const onChangeDelivery: UniHelper.SelectorPickerOnChange = (ev) => {
-  activeIndex.value = ev.detail.value
-}
-
 onMounted(() => {
   getMemberOrderPreData()
 })
-
+const addressStore = useAddressStore()
+// 收货地址
+const selecteAddress = computed(() => {
+  return addressStore.selectedAddress || orderPre.value?.userAddresses.find((v) => v.isDefault)
+})
 // 获取订单信息
 const orderPre = ref<OrderPreResult>()
 const getMemberOrderPreData = async () => {
@@ -55,26 +44,51 @@ const getMemberOrderPreData = async () => {
     orderPre.value = res.result
   }
 }
-
-const addressStore = useAddressStore()
-const selecteAddress = computed(() => {
-  return addressStore.selectedAddress || orderPre.value?.userAddresses.find((v) => v.isDefault)
-})
-
-//提交订单
+// 提交订单
 const onOrderSubmit = async () => {
+  // 没有收货地址提醒
   if (!selecteAddress.value?.id) {
-    return uni.showToast({ icon: 'none', title: '请选择收货地址' })
+    return uni.showToast({
+      icon: 'none',
+      title: '请选择收货地址'
+    })
   }
+  // 发送请求
   const res = await postMemberOrderAPI({
     addressId: selecteAddress.value?.id,
     buyerMessage: buyerMessage.value,
     deliveryType: activeDelivery.value.type,
-    goods: orderPre.value!.goods.map((v) => ({ count: v.count, id: v.id, skus: v.attrsText })),
+    // 只需要orderPre.value!.goods里的 count和skuId
+    goods: orderPre.value!.goods.map((v) => ({
+      count: v.count,
+      id: v.id,
+      skus: v.attrsText
+    })),
     payChannel: 2,
     payType: 1
   })
-  uni.redirectTo({ url: `/pagesOrder/detail/detail?id=${res.result.id}` })
+  // 关闭当前⻚面，跳转到订单详情，传递订单id
+  uni.redirectTo({
+    url: `/pagesOrder/detail/detail?id=${res.result.id}`
+  })
+}
+// 获取屏幕边界到安全区域距离
+const { safeAreaInsets } = uni.getSystemInfoSync()
+// 订单备注
+const buyerMessage = ref('')
+// 配送时间
+const deliveryList = ref([
+  { type: 1, text: '时间不限 (周一至周日)' },
+  { type: 2, text: '工作日送 (周一至周五)' },
+  { type: 3, text: '周末配送 (周六至周日)' }
+])
+// 当前配送时间下标
+const activeIndex = ref(0)
+// 当前配送时间
+const activeDelivery = computed(() => deliveryList.value[activeIndex.value])
+// 修改配送时间
+const onChangeDelivery: UniHelper.SelectorPickerOnChange = (ev) => {
+  activeIndex.value = ev.detail.value
 }
 </script>
 
@@ -87,13 +101,16 @@ const onOrderSubmit = async () => {
       hover-class="none"
       url="/pagesMember/address/address?from=order"
     >
-      <view class="user"> {{ selecteAddress.receiver }} {{ selecteAddress.contact }} </view>
+      <view class="user">{{ selecteAddress.receiver }}{{ selecteAddress.contact }}</view>
       <view class="address">
         {{ codeToText[selecteAddress.provinceCode?.replace(/0+$/, '')] }}
         {{ codeToText[selecteAddress.cityCode?.replace(/0+$/, '')] }}
         {{ codeToText[selecteAddress.countyCode?.replace(/0+$/, '')] }}
         {{ selecteAddress.address }}
       </view>
+    </navigator>
+    <navigator v-else class="shipment" hover-class="none" url="/pagesMember/address/address?from=order">
+      <view class="address"> 请选择收货地址 </view>
       <text class="icon icon-right"></text>
     </navigator>
 
@@ -108,7 +125,7 @@ const onOrderSubmit = async () => {
       >
         <image class="picture" :src="item.picture" />
         <view class="meta">
-          <view class="name ellipsis"> {{ item.name }} </view>
+          <view class="name ellipsis">{{ item.name }}</view>
           <view class="attrs">{{ item.attrsText }}</view>
           <view class="prices">
             <view class="pay-price symbol">{{ item.payPrice }}</view>

@@ -1,13 +1,11 @@
 import 'vue'
-import Guess from '@/components/Guess/Guess.vue'
+import wGuess from '@/components/wGuess/wGuess.vue'
 import wSwiper from '@/components/wSwiper/wSwiper.vue'
-
 declare module 'vue' {
   export interface GlobalComponents {
     wSwiper: typeof wSwiper
-    Guess: typeof Guess
+    wGuess: typeof wGuess
   }
 }
-
 // 组件实例类型
-export type GuessInstance = InstanceType<typeof Guess>
+export type wGuessInstance = InstanceType<typeofwGuess>

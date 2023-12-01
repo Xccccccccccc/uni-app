@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-const emit = defineEmits<{
-  (event: 'close'): void
-}>()
+const props = defineProps({})
+const emit = defineEmits<{ (event: 'close'): void }>()
 </script>
 
 <template>

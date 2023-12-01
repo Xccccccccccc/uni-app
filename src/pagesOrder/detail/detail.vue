@@ -1,31 +1,30 @@
 <script setup lang="ts">
-import { OrderState, orderStateList } from '@/config/constants'
-// 获取屏幕边界到安全区域距离
-const { safeAreaInsets } = uni.getSystemInfoSync()
-// 弹出层组件
-const popup = ref<UniHelper.UniPopupInstance>()
-// 取消原因列表
-const reasonList = ref(['商品无货', '不想要了', '商品信息填错了', '地址信息填写错误', '商品降价', '其它'])
-// 订单取消原因
-const reason = ref('')
-// 复制内容
-const onCopy = (id: string) => {
-  // 设置系统剪贴板的内容
-  uni.setClipboardData({ data: id })
-}
-// 获取页面参数
-const query = defineProps<{
-  id: string
-}>()
-
 /**
  * 自定义导航栏交互
  */
 // 获取页面栈
+import { OrderState, orderStateList } from '@/config/constants'
+import {
+  getMemberOrderByIdAPI,
+  getMemberOrderCancelByIdAPI,
+  getMemberOrderLogisticsByIdAPI,
+  putMemberOrderReceiptByIdAPI,
+  deleteMemberOrderAPI,
+  getMemberOrderConsignmentByIdAPI,
+  getPayWxPayMiniPayAPI,
+  getPayMockAPI
+} from '@/api/order.api'
 const pages = getCurrentPages()
+// 倒计时结束事件
+const onTimeup = () => {
+  // 修改订单状态为已取消
+  order.value!.orderState = OrderState.YiQuXiao
+}
 // 获取当前页面实例，数组最后一项
 const pageInstance = pages.at(-1) as any
-
+onLoad(() => {
+  getMemberOrderByIdData()
+})
 // 页面渲染完毕，绑定动画效果
 onReady(() => {
   // 动画效果,导航栏背景色
@@ -55,7 +54,30 @@ onReady(() => {
     endScrollOffset: 50
   })
 })
-
+// 是否为开发环境
+const isDev = import.meta.env.DEV
+// 模拟发货
+const onOrderSend = async () => {
+  if (isDev) {
+    await getMemberOrderConsignmentByIdAPI(query.id)
+    uni.showToast({ icon: 'success', title: '模拟发货完成' })
+    // 主动更新订单状态
+    order.value!.orderState = OrderState.DaiShouHuo
+  }
+}
+// 获取屏幕边界到安全区域距离
+const { safeAreaInsets } = uni.getSystemInfoSync()
+// 弹出层组件
+const popup = ref<UniHelper.UniPopupInstance>()
+// 取消原因列表
+const reasonList = ref(['商品无货', '不想要了', '商品信息填错了', '地址信息填写错误', '商品降价', '其它'])
+// 订单取消原因
+const reason = ref('')
+// 复制内容
+const onCopy = (id: string) => {
+  // 设置系统剪贴板的内容
+  uni.setClipboardData({ data: id })
+}
 const order = ref<OrderResult>()
 const getMemberOrderByIdData = async () => {
   const res = await getMemberOrderByIdAPI(query.id)
@@ -67,7 +89,21 @@ const getMemberOrderByIdData = async () => {
     getMemberOrderLogisticsByIdData()
   }
 }
-
+// 订单支付
+const onOrderPay = async () => {
+  // 通过环境变量区分开发环境
+  if (import.meta.env.DEV) {
+    // 开发环境：模拟支付，修改订单状态为已支付
+    await getPayMockAPI(parseInt(query.id))
+  } else {
+    // 生产环境：获取支付参数 + 发起微信支付
+    const res = await getPayWxPayMiniPayAPI({ orderId: query.id })
+    await wx.requestPayment(res.result)
+  } // 关闭当前⻚，再跳转支付结果⻚
+  uni.redirectTo({
+    url: `/pagesOrder/payment/payment?id=${query.id}`
+  })
+}
 // 获取物流信息
 const logisticList = ref<LogisticItem[]>([])
 const getMemberOrderLogisticsByIdData = async () => {
@@ -77,7 +113,7 @@ const getMemberOrderLogisticsByIdData = async () => {
 }
 
 // 删除订单
-const onOrderDelete = (id: string) => {
+const onOrderDelete = () => {
   // 二次确认
   uni.showModal({
     content: '是否删除订单',
@@ -101,46 +137,11 @@ const onOrderCancel = async () => {
   // 轻提示
   uni.showToast({ icon: 'none', title: '订单取消成功' })
 }
-
-onLoad(() => {
-  getMemberOrderByIdData()
-})
-//倒计时结束时间
-const onTimeup = () => {
-  //修改订单状态为已取消
-  order.value!.orderState = OrderState.YiQuXiao
-}
-//订单支付
-const onOrderPay = async (id: string) => {
-  //通过环境变量区分开发环境
-  if (import.meta.env.DEV) {
-    //开发环境：模拟支付，修改订单状态已支付
-    await getPayMockAPI(parseInt(query.id))
-  } else {
-    //生产环境：获取支付参数+发起微信支付
-    const res = await getPayWxPayMiniPayAPI({ orderId: query.id })
-    await wx.requestPayment(res.result)
-  }
-  //关闭当前页，再跳转支付结果页
-  uni.redirectTo({ url: `/pagesOrder/payment/payment?id=${query.id}` })
-}
-//是否为开发环境
-const isDev = import.meta.env.DEV
-//模拟发货
-const onOrderSend = async () => {
-  if (isDev) {
-    await getMemberOrderConsignmentByIdAPI(query.id)
-    uni.showToast({ icon: 'success', title: '模拟发货完成' })
-    //主动更新订单状态
-    order.value!.orderState = OrderState.DaiShouHuo
-  }
-}
-
 // 确认收货
-const onOrderConfirm = (id: string) => {
-  // ⼆次确认弹窗
+const onOrderConfirm = () => {
+  // 二次确认弹窗
   uni.showModal({
-    content: '为保障您的权益，请收到货并确认⽆误后，再确认收货',
+    content: '为保障您的权益，请收到货并确认无误后，再确认收货',
     success: async (success) => {
       if (success.confirm) {
         const res = await putMemberOrderReceiptByIdAPI(query.id)
@@ -150,6 +151,10 @@ const onOrderConfirm = (id: string) => {
     }
   })
 }
+// 获取页面参数
+const query = defineProps<{
+  id: string
+}>()
 </script>
 
 <template>
@@ -161,7 +166,7 @@ const onOrderConfirm = (id: string) => {
       <view class="title">订单详情</view>
     </view>
   </view>
-  <scroll-view scroll-y enable-back-to-top class="viewport" id="scroller">
+  <scroll-view scroll-y class="viewport" enable-back-to-top id="scroller">
     <template v-if="order">
       <!-- 订单状态 -->
       <view class="overview" :style="{ paddingTop: safeAreaInsets!.top + 20 + 'px' }">
@@ -171,6 +176,7 @@ const onOrderConfirm = (id: string) => {
           <view class="tips">
             <text class="money">应付金额: ¥ {{ order!.payMoney }}</text>
             <text class="time">支付剩余</text>
+            <!-- 倒计时组件 -->
             <uni-countdown
               :second="order.countdown"
               color="#fff"
@@ -195,8 +201,8 @@ const onOrderConfirm = (id: string) => {
               再次购买
             </navigator>
             <!-- 待发货状态：模拟发货,开发期间使用,用于修改订单状态为已发货 -->
-            <view v-if="isDev && order.orderState == OrderState.DaiFaHuo" @tap="onOrderSend" class="button">
-              模拟发货
+            <view v-if="isDev && order.orderState == OrderState.DaiFaHuo" @tap="onOrderSend" class="button"
+              >> 模拟发货
             </view>
           </view>
         </template>
@@ -221,7 +227,7 @@ const onOrderConfirm = (id: string) => {
           <navigator
             class="navigator"
             v-for="item in order?.skus"
-            :key="item.id"
+            :key="item"
             :url="`/pages/goods/goods?id=${item.goodsId}`"
             hover-class="none"
           >
@@ -235,28 +241,29 @@ const onOrderConfirm = (id: string) => {
                   <text>{{ item.price }}</text>
                 </view>
               </view>
-              <view class="quantity">{{ item.count }}</view>
+              <view class="quantity">x{{ item.count }}</view>
             </view>
           </navigator>
           <!-- 待评价状态:展示按钮 -->
-          <view class="action" v-if="order!.orderState === OrderState.DaiPingJia">去评价</view>
-          <view class="button primary">申请售后</view>
-          <navigator url="" class="button"> 去评价 </navigator>
+          <view class="action" v-if="order!.orderState === OrderState.DaiPingJia">
+            <view class="button primary">申请售后</view>
+            <navigator url="" class="button"> 去评价 </navigator>
+          </view>
         </view>
-      </view>
-      <!-- 合计 -->
-      <view class="total">
-        <view class="row">
-          <view class="text">商品总价: </view>
-          <view class="symbol">{{ order!.totalMoney }}</view>
-        </view>
-        <view class="row">
-          <view class="text">运费: </view>
-          <view class="symbol">{{ order!.postFree }}</view>
-        </view>
-        <view class="row">
-          <view class="text">应付金额: </view>
-          <view class="symbol primary">{{ order!.payMoney }}</view>
+        <!-- 合计 -->
+        <view class="total">
+          <view class="row">
+            <view class="text">商品总价: </view>
+            <view class="symbol">{{ order!.totalMoney }}</view>
+          </view>
+          <view class="row">
+            <view class="text">运费: </view>
+            <view class="symbol">{{ order!.postFree }}</view>
+          </view>
+          <view class="row">
+            <view class="text">应付金额: </view>
+            <view class="symbol primary">{{ order!.payMoney }}</view>
+          </view>
         </view>
       </view>
 
@@ -272,7 +279,7 @@ const onOrderConfirm = (id: string) => {
       </view>
 
       <!-- 猜你喜欢 -->
-      <Guess ref="guessRef" />
+      <wGuess ref="guessRef" />
 
       <!-- 底部操作栏 -->
       <view class="toolbar-height" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }"></view>
@@ -292,8 +299,8 @@ const onOrderConfirm = (id: string) => {
             再次购买
           </navigator>
           <!-- 待收货状态: 展示确认收货 -->
-          <view class="button" v-if="order.orderState === OrderState.DaiShouHuo" @tap="onOrderConfirm">
-            确认收货
+          <view v-if="order.orderState === OrderState.DaiShouHuo" @tap="onOrderConfirm" class="button"
+            >> 确认收货
           </view>
           <!-- 待评价状态: 展示去评价 -->
           <view class="button" v-if="order.orderState === OrderState.DaiPingJia"> 去评价 </view>

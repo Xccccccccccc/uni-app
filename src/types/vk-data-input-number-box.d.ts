@@ -1,11 +1,8 @@
 import { Component } from '@uni-helper/uni-app-types'
-
 /** 步进器 */
 export type InputNumberBox = Component<InputNumberBoxProps>
-
 /** 步进器实例 */
 export type InputNumberBoxInstance = InstanceType<InputNumberBox>
-
 /** 步进器属性 */
 export type InputNumberBoxProps = {
   /** 输入框初始值（默认1） */
@@ -14,7 +11,7 @@ export type InputNumberBoxProps = {
   min: number
   /** 用户可输入的最大值（默认99999） */
   max: number
-  /**  步长，每次加或减的值（默认1） */
+  /**  步⻓，每次加或减的值（默认1） */
   step: number
   /** 是否禁用操作，包括输入框，加减按钮 */
   disabled: boolean
@@ -35,7 +32,6 @@ export type InputNumberBoxProps = {
   /** 点击减少按钮时触发 */
   onMinus: (event: InputNumberBoxEvent) => void
 }
-
 /** 步进器事件对象 */
 export type InputNumberBoxEvent = {
   /** 输入框当前值 */
@@ -43,7 +39,6 @@ export type InputNumberBoxEvent = {
   /** 步进器标识符 */
   index: string
 }
-
 /** 全局组件类型声明 */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
